@@ -1,0 +1,46 @@
+import pytest
+from selenium import webdriver
+import uu
+import os
+import uuid
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
+# главная страница со всеми питомцами
+
+@pytest.mark.usefixtures("test")
+def test_show_pets():
+    # неявное ожидание всех элементов на странице
+    pytest.driver.implicitly_wait(5)
+
+    # Ввод email
+    pytest.driver.find_element_by_id('email').send_keys('irina1@mail.ru')
+    # Ввод пароля
+    pytest.driver.find_element_by_id('pass').send_keys('12345678')
+    # Нажимаем на кнопку входа в аккаунт
+    pytest.driver.find_element_by_css_selector('button[type="submit"]').click()
+
+    # Переход к своим питомцам
+    pytest.driver.find_element_by_css_selector('button[type="button"]').click()
+    pytest.driver.find_element_by_class_name("nav-link").click()
+
+    # Проверяем, что мы оказались на странице пользователя с его питомцами
+    assert pytest.driver.find_element_by_tag_name('h2').text == "Knopa"
+
+    # Явное ожидание появление элементов таблицы на странице
+    wait = WebDriverWait(pytest.driver, 5).until(EC.presence_of_all_elements_located(('id', 'all_my_pets')))
+
+    # подсчёт питомцев на странице, проверяем, что все они есть на странице пользователя
+    pets = pytest.driver.find_elements_by_xpath('//*[@id="all_my_pets"]/table/tbody/tr')
+    assert len(pets) == 2
+
+    # проверка, что у каждой карточки есть картинка, имя и описание
+    images = pytest.driver.find_element_by_xpath('//*[@id="all_my_pets"]/table/tbody/tr/th/img')
+
+    for i in range(len(pets)):
+        # проверка наличия картинок у всех питомцев
+        print(images.is_displayed())
+    # у всех есть имя, описание и возраст
+    assert pytest.driver.find_elements_by_css_selector('#all_my_pets tr')[1].text == "Knopa Dog 1\n×"
+    assert pytest.driver.find_elements_by_css_selector('#all_my_pets tr')[2].text == "Barsik Cat 2\n×"
